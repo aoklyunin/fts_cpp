@@ -11,12 +11,18 @@
 
 #include <zconf.h>
 #include <chrono>
+#include <string.h>
+#include <iostream>
+#include <cstring>
+#include <cstdio>
+#include <fcntl.h>
+#include <termio.h>
 
 class DynPicker {
 public:
     void connect(const char *comPort, bool auto_adjust);
 
-    void readForces(bool flgZero, float *res);
+    long readForces(bool flgZero, float *res);
 
     void closeConn();
 
@@ -26,6 +32,7 @@ private:
     int SetComAttr(int fdc);
     bool readFromCOM(const int length, char *reply);
     long getDeltaMicros();
+    int64_t epoch_usec();
     int fdc;
     float *calib;
     float *offset;

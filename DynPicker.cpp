@@ -2,24 +2,27 @@
 // Created by alex on 10.01.18.
 //
 
-#include <cstdio>
-#include <fcntl.h>
-#include <termio.h>
 #include "DynPicker.h"
-#include <string.h>
-#include <iostream>
-#include <cstring>
+
 
 /*
  * получить разницу в микросекундах
  */
 long DynPicker::getDeltaMicros() {
-    struct timespec curTime;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &curTime);
-    long curns = curTime.tv_nsec;
-    long delta = (curns - prevTime) / 1000;
+    int64_t curns = epoch_usec();
+    long delta = (curns - prevTime);
     prevTime = curns;
     return delta;
+}
+
+/*
+ * Получаем текущее время в микросекундах
+ */
+int64_t DynPicker::epoch_usec()
+{
+    auto epoch = std::chrono::high_resolution_clock::now().time_since_epoch();
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    return us.count();
 }
 
 /*
@@ -65,7 +68,7 @@ void DynPicker::connect(const char *comPort, bool auto_adjust) {
  * flgZero - флаг, нужно ли вычитать из показаний датчика показания, полученные при первом измерении
  * res - указатель на массив, в который записываются показания датчиков
  */
-void DynPicker::readForces(bool flgZero, float *res) { // Request for initial single data
+long DynPicker::readForces(bool flgZero, float *res) { // Request for initial single data
     // запрос к датчику, чтобы получить измерения
     write(fdc, "R", 1);
     // читаем ответ
@@ -86,7 +89,7 @@ void DynPicker::readForces(bool flgZero, float *res) { // Request for initial si
         if (flgZero) res[i] -= offset[i];
     }
     // выводим кол-во микросекунд на одну итерацию
-    std::cout << getDeltaMicros() << std::endl;
+    return getDeltaMicros();
 }
 
 /*
