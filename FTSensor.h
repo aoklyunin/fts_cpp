@@ -47,7 +47,7 @@ private:
 
     int _set_com_attr();
 
-    int _getForceFromBuf(int start,float * res) ;
+    int _getForceFromBuf(int start,float * res);
 
     int _read_from_COM(int length);
 

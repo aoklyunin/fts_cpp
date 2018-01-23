@@ -12,7 +12,7 @@ int FTSensor::readLast(float *res) {
     if (_buf_filled < _DATA_LENGTH)
         return -1;
     else
-        return _getForceFromBuf((_buf_filled / _DATA_LENGTH) * _DATA_LENGTH, res);
+        return _getForceFromBuf(_buf_filled - _buf_filled % _DATA_LENGTH, res);
 }
 
 
