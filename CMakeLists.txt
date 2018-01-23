@@ -4,4 +4,4 @@ project(fts_cpp)
 set(CMAKE_CXX_STANDARD 11)
 
 
-add_executable(fts_cpp main.cpp DynPicker.cpp DynPicker.h)
+add_executable(fts_cpp main.cpp FTSensor.cpp FTSensor.h time.cpp)
