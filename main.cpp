@@ -21,7 +21,7 @@ int main() {
                     res[5]);
             myfile << buffer << std::endl;
             // std::cout <<  res[2] << std::endl;
-            sprintf(buffer, "%.1f  %.2f\n", res[2], res[3]);
+            sprintf(buffer, "%4li %.1f  %.2f\n",dp.get_delta_micros(), res[2], res[3]);
             std::cout << buffer;
         }
     }

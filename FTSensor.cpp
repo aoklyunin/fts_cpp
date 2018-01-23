@@ -19,7 +19,7 @@ int FTSensor::readLast(float *res) {
 /*
  * get difference in microseconds between time of previous loop iteration and current
  */
-int64_t FTSensor::_get_delta_micros() {
+int64_t FTSensor::get_delta_micros() {
     int64_t curns = epoch_usec();
     int64_t delta = (curns - _prev_time);
     _prev_time = curns;

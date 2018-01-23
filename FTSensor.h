@@ -28,7 +28,9 @@ public:
 
     FTSensor(const char *comPort);
 
-    virtual ~FTSensor();
+    int64_t get_delta_micros();
+
+    ~FTSensor();
 
 private:
 
@@ -46,8 +48,6 @@ private:
     int _set_com_attr();
 
     int _getForceFromBuf(int start,float * res) ;
-
-    int64_t _get_delta_micros();
 
     int _read_from_COM(int length);
 
