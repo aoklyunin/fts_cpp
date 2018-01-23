@@ -5,12 +5,14 @@
 #include "FTSensor.h"
 
 
+/*
+ * read last package
+ */
 int FTSensor::readLast(float *res) {
-    /*if (_buf_filled < _DATA_LENGTH)
+    if (_buf_filled < _DATA_LENGTH)
         return -1;
     else
-        (_buf_filled/_DATA_LENGTH)*_DATA_LENGTH)*/
-    return 0;
+        return _getForceFromBuf((_buf_filled / _DATA_LENGTH) * _DATA_LENGTH, res);
 }
 
 
@@ -51,14 +53,17 @@ void FTSensor::_calibrate() {
     while (_buf_filled < _CALIB_DATA_LENGTH) {
         _read_from_COM(_CALIB_DATA_LENGTH);
     }
+
     // parse response string, first and last four symbols contain no data
     int ret = sscanf(std::string(_buf).substr(1, _CALIB_DATA_LENGTH - 4).c_str(),
                      "%f,%f,%f,%f,%f,%f",
                      &_calib[0], &_calib[1], &_calib[2], &_calib[3], &_calib[4], &_calib[5]);
+
     // if we can't response string
     if (ret == EOF) {
         throw std::runtime_error(std::string("Error in reading from COM") + std::strerror(errno));
     }
+
     // set end number to start position
     _buf_filled = 0;
 }
@@ -66,7 +71,7 @@ void FTSensor::_calibrate() {
 /*
  * read next force
  */
-int FTSensor::readNext(float *res) { // Request for initial single data
+int FTSensor::readNext(float *res) {
     // request to sensor to get torques
     write(_fdc, "R", 1);
     int c = _read_from_COM(_DATA_LENGTH);
@@ -75,19 +80,34 @@ int FTSensor::readNext(float *res) { // Request for initial single data
     if (_buf_filled < _DATA_LENGTH)
         return 0;
 
+    FTSensor::_getForceFromBuf(0, res);
+    return 1;
+}
+
+/*
+ * get force from target buf position
+ * and remove all symbols to the end of current package
+ */
+
+int FTSensor::_getForceFromBuf(int start, float *res) {
+
     // parse response string
-    for (int i = 0; i < 6; i++) {
-        // parse i-th value from string ( each of them takes 2 bites or 4 symbols)
-        unsigned short val = 0;
+    for (unsigned long i = 0; i < 6; i++) {
+        // parse i-th value from string
+        // (each of them takes 2 bites or 4 symbols)
+
+        short val = 0;
+
         int ret = sscanf(std::string(_buf).substr(i * 4 + 3, i * 4 + 7).c_str(), "%4hx", &val);
+
         //if we get error by parsing string
         if (ret == EOF) {
             throw std::runtime_error(std::string("Error in reading from COM") + std::strerror(errno));
         }
         // get signed value
-        res[i] = float((val - 8192)) / _calib[i];
+        res[i] = static_cast<float>(val - 8192) / _calib[i];
     }
-    std::memmove(_buf + _DATA_LENGTH, _buf, _buf_sz - _DATA_LENGTH);
+    std::memmove(_buf + _DATA_LENGTH + start, _buf, static_cast<size_t>(_buf_sz - (_DATA_LENGTH + start)));
     _buf_filled -= _DATA_LENGTH;
     return 1;
 }
@@ -140,11 +160,11 @@ int FTSensor::_set_com_attr() {
  * read bytes from com
  */
 int FTSensor::_read_from_COM(const int length) {
-    int c = read(_fdc, _buf + _buf_filled, length);
+    ssize_t c = read(_fdc, _buf + _buf_filled, (size_t) length);
     if (c >= 0) {
         _buf_filled += c;
     }
-    return c;
+    return static_cast<int>(c);
 }
 
 /*
@@ -152,8 +172,8 @@ int FTSensor::_read_from_COM(const int length) {
  */
 FTSensor::FTSensor(const char *comPort) {
     _prev_time = epoch_usec();
-    for (int i = 0; i < 6; i++)
-        _calib[i] = 1;
+    for (float &i : _calib)
+        i = 1;
     openConn(comPort);
     _calibrate();
 }

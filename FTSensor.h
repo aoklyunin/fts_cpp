@@ -45,9 +45,11 @@ private:
 
     int _set_com_attr();
 
+    int _getForceFromBuf(int start,float * res) ;
+
     int64_t _get_delta_micros();
 
-    int _read_from_COM(const int length);
+    int _read_from_COM(int length);
 
 };
 

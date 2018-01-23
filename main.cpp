@@ -8,7 +8,6 @@
 
 int main() {
     FTSensor dp("/dev/ttyUSB0");
-
     std::ofstream myfile;
     myfile.open("../log/log.csv");
 
@@ -17,7 +16,8 @@ int main() {
         int dt = dp.readNext(res);
         if (dt == 1) {
             char buffer[100];
-            sprintf(buffer, "%d, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f", dt, res[0], res[1], res[2], res[3], res[4],
+            sprintf(buffer, "%d, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f",
+                    dt, res[0], res[1], res[2], res[3], res[4],
                     res[5]);
             myfile << buffer << std::endl;
             // std::cout <<  res[2] << std::endl;
