@@ -4,7 +4,7 @@
 
 
 // время эксперимента
-#define measCnt 600000
+#define measCnt 6000000
 
 int main() {
     FTSensor dp("/dev/ttyUSB0",true);

@@ -169,14 +169,12 @@ int FTSensor::_read_from_COM(const int length) {
         // check if _fdc has new bytes
         if ((numBytes = read(_fdc, _buf + _buf_filled, (size_t) length)) < 0) {
             if (errno != EWOULDBLOCK) {
-                // TODO: обработать ошибку ввода-вывода
                 perror("read");
                 exit(EXIT_FAILURE);
             }else{
                 return -1;
             }
         } else {
-            // Как-либо обрабатываем данные.
             _buf_filled += numBytes;
         }
     } else {
