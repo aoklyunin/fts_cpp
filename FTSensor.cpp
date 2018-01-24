@@ -36,12 +36,12 @@ void FTSensor::closeConn() {
 /*
  * open COMPort by it's address
  */
-void FTSensor::openConn(const char *comPort) {
+void FTSensor::openConn(const char *comPort, bool flgNonBlocked) {
     _fdc = open(comPort, O_RDWR);
     if (_fdc == -1) {
         throw std::runtime_error(std::string("Error in opening COM") + std::strerror(errno));
     }
-    _set_com_attr();
+    _set_com_attr(flgNonBlocked);
 }
 
 /*
@@ -115,7 +115,7 @@ int FTSensor::_getForceFromBuf(int start, float *res) {
 /*
  * set com port params
  */
-int FTSensor::_set_com_attr() {
+int FTSensor::_set_com_attr(bool flgNonBlocked) {
     int n;
 
     struct termios term;
@@ -150,6 +150,10 @@ int FTSensor::_set_com_attr() {
     term.c_cc[VLNEXT] = 0;     /* Ctrl-v */
     term.c_cc[VEOL2] = 0;     /* '?0' */
 
+    if (flgNonBlocked) {
+        const int flags = fcntl(_fdc, F_GETFL, 0);
+        fcntl(_fdc, F_SETFL, flags | O_NONBLOCK);
+    }
 //  tcflush(fdc, TCIFLUSH);
     n = tcsetattr(_fdc, TCSANOW, &term);
     over :
@@ -160,21 +164,38 @@ int FTSensor::_set_com_attr() {
  * read bytes from com
  */
 int FTSensor::_read_from_COM(const int length) {
-    ssize_t c = read(_fdc, _buf + _buf_filled, (size_t) length);
-    if (c >= 0) {
-        _buf_filled += c;
+    ssize_t numBytes;
+    if (_non_blocked) {
+        // check if _fdc has new bytes
+        if ((numBytes = read(_fdc, _buf + _buf_filled, (size_t) length)) < 0) {
+            if (errno != EWOULDBLOCK) {
+                // TODO: обработать ошибку ввода-вывода
+                perror("read");
+                exit(EXIT_FAILURE);
+            }else{
+                return -1;
+            }
+        } else {
+            // Как-либо обрабатываем данные.
+            _buf_filled += numBytes;
+        }
+    } else {
+        if ((numBytes = read(_fdc, _buf + _buf_filled, (size_t) length)) >= 0) {
+            _buf_filled += numBytes;
+        }
     }
-    return static_cast<int>(c);
+    return static_cast<int>(numBytes);
 }
 
 /*
  * Constructor
  */
-FTSensor::FTSensor(const char *comPort) {
+FTSensor::FTSensor(const char *comPort, bool non_blocked) {
+    _non_blocked = non_blocked;
     _prev_time = epoch_usec();
     for (float &i : _calib)
         i = 1;
-    openConn(comPort);
+    openConn(comPort, non_blocked);
     _calibrate();
 }
 

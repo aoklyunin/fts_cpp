@@ -7,7 +7,7 @@
 #define measCnt 600000
 
 int main() {
-    FTSensor dp("/dev/ttyUSB0");
+    FTSensor dp("/dev/ttyUSB0",true);
     std::ofstream myfile;
     myfile.open("../log/log.csv");
 

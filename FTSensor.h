@@ -18,7 +18,7 @@
 
 class FTSensor {
 public:
-    void openConn(const char *comPort);
+    void openConn(const char *comPort, bool flgNonBlocked);
 
     int readNext(float *res);
 
@@ -26,7 +26,7 @@ public:
 
     void closeConn();
 
-    FTSensor(const char *comPort);
+    FTSensor(const char *comPort, bool non_blocked);
 
     int64_t get_delta_micros();
 
@@ -42,12 +42,13 @@ private:
     int _fdc;
     float _calib[6];
     int64_t _prev_time;
+    bool _non_blocked;
 
     void _calibrate();
 
-    int _set_com_attr();
+    int _set_com_attr(bool flgNonBlocked);
 
-    int _getForceFromBuf(int start,float * res);
+    int _getForceFromBuf(int start, float *res);
 
     int _read_from_COM(int length);
 
